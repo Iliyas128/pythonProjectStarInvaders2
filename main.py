@@ -116,10 +116,19 @@ def quit_game():
     quit()
 def main_menu():
     global game_state
-    screen.fill((0, 0, 0))
-    main_menu_text = over_font.render("Press SPACE to start", True, (255, 255, 255))
-    screen.blit(main_menu_text, (340, SCREEN_HEIGHT/2-50))
-    pygame.display.update()
+    while game_state == MENU:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                quit()
+
+        screen.fill((0, 0, 0))
+        screen.blit(background, (0, 0))
+
+        draw_button("Play", 150, 450, 100, 50, (0, 255, 0), (0, 200, 0), game_loop)
+        draw_button("Quit", 350, 450, 100, 50, (255, 0, 0), (200, 0, 0), quit_game)
+
+        pygame.display.update()
 
     for event in pygame.event.get():
         if event.type == pygame.KEYDOWN:
