@@ -7,9 +7,9 @@ from pygame import mixer
 pygame.init()
 
 
-
 class Button:
-    def __init__(self, x, y, width, height, text='', color=(73, 73, 73), highlight_color=(189, 189, 189), function=None):
+    def __init__(self, x, y, width, height, text='', color=(73, 73, 73), highlight_color=(189, 189, 189),
+                 function=None):
         self.x = x
         self.y = y
         self.width = width
@@ -22,11 +22,13 @@ class Button:
     def draw(self, win, outline=None):
         if outline:
             pygame.draw.rect(win, outline, (self.x - 2, self.y - 2, self.width + 4, self.height + 4), 0)
-        pygame.draw.rect(win, self.color if not self.is_over(pygame.mouse.get_pos()) else self.highlight_color, (self.x, self.y, self.width, self.height), 0)
+        pygame.draw.rect(win, self.color if not self.is_over(pygame.mouse.get_pos()) else self.highlight_color,
+                         (self.x, self.y, self.width, self.height), 0)
         if self.text != '':
             font = pygame.font.SysFont('comicsans', 60)
             text = font.render(self.text, 1, (0, 0, 0))
-            win.blit(text, (self.x + (self.width / 2 - text.get_width() / 2), self.y + (self.height / 2 - text.get_height() / 2)))
+            win.blit(text, (
+                self.x + (self.width / 2 - text.get_width() / 2), self.y + (self.height / 2 - text.get_height() / 2)))
 
     def is_over(self, pos):
         if self.x < pos[0] < self.x + self.width and self.y < pos[1] < self.y + self.height:
@@ -39,13 +41,13 @@ class Button:
                 if self.function:
                     self.function()
 
+
 # Create the screen
 SCREEN_WIDTH, SCREEN_HEIGHT = 1280, 960
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 # Инициализация bullet_x и bullet_y глобально
 bullet_x = 0
 bullet_y = SCREEN_HEIGHT - 100  # Начальное положение, соответствующее позиции игрока
-
 
 # Background
 background = pygame.transform.scale(pygame.image.load('DeathStar.jpg').convert(), (SCREEN_WIDTH, SCREEN_HEIGHT))
@@ -70,26 +72,25 @@ current_level = 1
 enemies_defeated = 0
 enemies_defeat_threshold = 5
 
+
 def create_enemy():
-    speed_increase = current_level * 0.5
-    enemy_x_change = 2 + speed_increase
+    speed_increase = current_level * 0.2  # Reduce the multiplier for speed increase per level
     return {
         'img': pygame.image.load('enemy.png').convert_alpha(),
         'x': random.randint(0, SCREEN_WIDTH - 64),
-        'y': random.randint(50, 150),
-        'x_change': enemy_x_change,
-        'y_change': 40,
+        'y': random.randint(-150, -50),  # Start enemies off-screen or at the top
+        'x_change': 0,  # Assuming enemies will only move vertically down
+        'y_change': speed_increase * 0.5,
     }
 
 
 enemies_per_level = 5
 enemies = [create_enemy() for _ in range(enemies_per_level)]
 
-
 # Bullet
 bullet_img = pygame.image.load('bullet.png').convert_alpha()
-bullet_x = 0
-bullet_y = player_y
+# bullet_x = 0
+# bullet_y = player_y
 bullet_x_change = 0
 bullet_y_change = 5
 bullet_state = "ready"
@@ -111,19 +112,24 @@ GAME_OVER = 3
 LEVEL_COMPLETED = 4
 game_state = MENU
 
+
 def show_score(x, y):
     score = font.render("Score: " + str(score_value), True, (255, 255, 255))
     screen.blit(score, (x, y))
+
 
 def game_over_text():
     over_text = over_font.render("GAME OVER", True, (255, 255, 255))
     screen.blit(over_text, (200, 250))
 
+
 def player(x, y):
     screen.blit(player_img, (x, y))
 
+
 def enemy(x, y, enemy_info):
     screen.blit(enemy_info['img'], (x, y))
+
 
 def fire_bullet(x, y):
     global bullet_state, bullet_x, bullet_y  # Указываем, что используем глобальные переменные
@@ -139,6 +145,7 @@ def is_collision(enemy_x, enemy_y, bullet_x, bullet_y):
         return True
     return False
 
+
 def update_level():
     global current_level, enemies_defeated, enemies, enemies_per_level, game_state
     if enemies_defeated >= enemies_defeat_threshold or not enemies:
@@ -148,14 +155,13 @@ def update_level():
         enemies = [create_enemy() for _ in range(enemies_per_level)]  # Repopulate enemies
         game_state = LEVEL_COMPLETED
 
- #Initialize bullet position outside the game loop to ensure it has a default value
-bullet_x = 0
-bullet_y = SCREEN_HEIGHT - 100  # Assuming this is the starting position of the player
+
 def game_loop():
     global game_state, enemies
     game_state = RUNNING
     enemies = [create_enemy() for _ in range(enemies_per_level)]  # Recreate enemies for the new level
     main()
+
 
 play_button = Button(150, 450, 100, 50, "Play", color=(0, 255, 0), highlight_color=(0, 200, 0), function=game_loop)
 
@@ -164,28 +170,53 @@ def quit_game():
     pygame.quit()
     quit()
 
+
 def resume_game():
     global game_state
     game_state = RUNNING
+
 
 def go_to_main_menu():
     global game_state
     game_state = MENU
 
+
 quit_button = Button(350, 450, 100, 50, "Quit", color=(255, 0, 0), highlight_color=(200, 0, 0), function=quit_game)
-play_button = Button(150, 450, 100, 50, "Play", color=(0, 255, 0), highlight_color=(0, 200, 0), function=game_loop)
-resume_button = Button(150, 450, 200, 50, "Resume", color=(0, 255, 0), highlight_color=(0, 200, 0), function=resume_game)
-continue_button = Button(SCREEN_WIDTH // 2 - 150, 400, 300, 50, "Continue", color=(0, 255, 0), highlight_color=(0, 200, 0), function=game_loop)
-main_menu_button = Button(400, 450, 300, 50, "Main Menu", color=(255, 0, 0), highlight_color=(200, 0, 0), function=go_to_main_menu)
+# play_button = Button(150, 450, 100, 50, "Play", color=(0, 255, 0), highlight_color=(0, 200, 0), function=game_loop)
+resume_button = Button(150, 450, 200, 50, "Resume", color=(0, 255, 0), highlight_color=(0, 200, 0),
+                       function=resume_game)
+# Assuming SCREEN_WIDTH and SCREEN_HEIGHT are the dimensions of your screen
+# and that you want to center the buttons both horizontally and vertically
+# with some space between them
+
+button_width = 300  # The width of your buttons
+button_height = 50  # The height of your buttons
+button_space = 20  # The space between buttons
+
+# Calculate the starting Y position of the first button so they are centered together vertically
+total_buttons_height = (2 * button_height) + button_space
+start_y_position = (SCREEN_HEIGHT - total_buttons_height) // 2
+
+# Calculate the X position so that the buttons are centered horizontally
+x_position = (SCREEN_WIDTH - button_width) // 2
+
+# Now position the buttons using the calculated positions
+continue_button = Button(x_position, start_y_position, button_width, button_height, "Continue", color=(0, 255, 0),
+                         highlight_color=(0, 200, 0), function=game_loop)
+main_menu_button = Button(x_position, start_y_position + button_height + button_space, button_width, button_height,
+                          "Main Menu", color=(255, 0, 0), highlight_color=(200, 0, 0), function=go_to_main_menu)
+
 
 def level_completed_screen():
-    congrats_image = pygame.transform.scale(pygame.image.load('congrats.png').convert_alpha(), (SCREEN_WIDTH, SCREEN_HEIGHT))
+    congrats_image = pygame.transform.scale(pygame.image.load('Congrats.jpg').convert_alpha(),
+                                            (SCREEN_WIDTH, SCREEN_HEIGHT))
     screen.blit(congrats_image, (0, 0))
     font = pygame.font.SysFont('comicsans', 60)
     text = font.render(f"You finished level {current_level - 1}", True, (255, 255, 255))
     screen.blit(text, (SCREEN_WIDTH // 2 - text.get_width() // 2, 150))
     continue_button.draw(screen)
     main_menu_button.draw(screen)
+
 
 def main_menu():
     global game_state
@@ -203,6 +234,7 @@ def main_menu():
             elif quit_button.is_over(pygame.mouse.get_pos()):
                 quit_button.function()
     pygame.display.update()
+
 
 def pause_menu():
     global game_state
@@ -222,9 +254,10 @@ def pause_menu():
         main_menu_button.draw(screen)
         pygame.display.update()
 
+
 # Main game loop
 def main():
-    global game_state, bullet_y, bullet_state, player_x, score_value, enemies_defeated, player_x_change
+    global game_state, bullet_y, bullet_state, player_x, score_value, enemies_defeated, player_x_change, bullet_x
     running = True
     player_x_change = 0  # Initialize player_x_change here to ensure it's defined before use
 
@@ -256,7 +289,17 @@ def main():
 
             # Enemy drawing and collision detection
             for i, enemy_info in enumerate(enemies[:]):
+                enemy_info['y'] += enemy_info['y_change']
+
+                # Check if the enemy goes off the bottom of the screen
+                if enemy_info['y'] >= SCREEN_HEIGHT - enemy_info['img'].get_height():
+                    game_state = GAME_OVER  # Change game state to GAME_OVER
+                    break  # Exit the loop, as the game is over
+
+                # If the game is not over, draw the enemy
                 enemy(enemy_info['x'], enemy_info['y'], enemy_info)
+
+                # Check for collision with bullet
                 collision = is_collision(enemy_info['x'], enemy_info['y'], bullet_x, bullet_y)
                 if collision:
                     explosion_sound = mixer.Sound("explosion.wav")
@@ -266,7 +309,6 @@ def main():
                     score_value += 1
                     enemies_defeated += 1
                     enemies.pop(i)  # Remove the enemy that was hit
-                    break  # Since the bullet can only hit one enemy at a time
 
             player_x += player_x_change
             if player_x <= 0:
@@ -301,6 +343,39 @@ def main():
                     elif main_menu_button.is_over(pygame.mouse.get_pos()):
                         main_menu_button.handle_event(event)
             pygame.display.update()
+            # kogda game over
+        if game_state == GAME_OVER:
+            game_over_text()  # Function to display the game over message
+            restart_button.draw(screen)
+            quitt_button.draw(screen)
+
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    running = False
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    if restart_button.is_over(pygame.mouse.get_pos()):
+                        restart_button.handle_event(event)
+                    elif quitt_button.is_over(pygame.mouse.get_pos()):
+                        quitt_button.handle_event(event)
+
+        # Make sure to update the display after drawing everything
+        pygame.display.update()
+
+
+def restart_game():
+    global game_state, score_value, player_x, player_y, enemies, current_level
+    score_value = 0
+    player_x = SCREEN_WIDTH / 2 - 32
+    player_y = SCREEN_HEIGHT - 100
+    current_level = 1
+    enemies = [create_enemy() for _ in range(enemies_per_level)]
+    game_state = RUNNING
+
+
+restart_button = Button(SCREEN_WIDTH // 2 - 150, SCREEN_HEIGHT // 2 + 50, 300, 50, "Restart", color=(0, 255, 0),
+                        highlight_color=(0, 200, 0), function=restart_game)
+quitt_button = Button(SCREEN_WIDTH // 2 - 150, SCREEN_HEIGHT // 2 + 120, 300, 50, "Quit", color=(255, 0, 0),
+                      highlight_color=(200, 0, 0), function=quit_game)
 
 if __name__ == "__main__":
     main()
