@@ -2,9 +2,50 @@ import pygame
 import random
 import math
 from pygame import mixer
+from NoIdea import Button
 
 # Initialize Pygame
 pygame.init()
+
+class Button:
+    def __init__(self, x, y, width, height, text='', color=(73, 73, 73), highlight_color=(189, 189, 189),
+                 function=None):
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height
+        self.text = text
+        self.color = color
+        self.highlight_color = highlight_color
+        self.function = function
+
+    def draw(self, win, outline=None):
+        if outline:
+            pygame.draw.rect(win, outline, (self.x - 2, self.y - 2, self.width + 4, self.height + 4), 0)
+
+        pygame.draw.rect(win, self.color if not self.is_over(pygame.mouse.get_pos()) else self.highlight_color,
+                         (self.x, self.y, self.width, self.height), 0)
+
+        if self.text != '':
+            font = pygame.font.SysFont('comicsans', 60)
+            text = font.render(self.text, 1, (0, 0, 0))
+            win.blit(text, (
+            self.x + (self.width / 2 - text.get_width() / 2), self.y + (self.height / 2 - text.get_height() / 2)))
+
+    def is_over(self, pos):
+        # Pos is the mouse position or a tuple of (x,y) coordinates
+        if self.x < pos[0] < self.x + self.width and self.y < pos[1] < self.y + self.height:
+            return True
+        return False
+
+    def handle_event(self, event):
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if self.is_over(pygame.mouse.get_pos()):
+                if self.function:
+                    self.function()
+
+
+
 
 # Create the screen
 SCREEN_WIDTH, SCREEN_HEIGHT = 1280, 960
@@ -91,21 +132,13 @@ def is_collision(enemy_x, enemy_y, bullet_x, bullet_y):
     else:
         return False
 
-def draw_button(text, x, y, width, height, inactive_color, active_color, action=None):
-    mouse= pygame.mouse.get_pos()
-    click = pygame.mouse.get_pressed()
-    if x + width > mouse[0] > x and y + height > mouse[1]>y:
-        pygame.draw.rect(screen, active_color,(x,y,width,height))
-        if click[0] ==1 and action is not None:
-            action()
-    else:
-        pygame.draw.rect(screen, inactive_color,(x,y,width, height))
+def is_over(self, pos):
+    # Pos is the mouse position or a tuple of (x,y) coordinates
+    if self.x < pos[0] < self.x + self.width and self.y < pos[1] < self.y + self.height:
+        print("Mouse is over the button.")
+        return True
+    return False
 
-    small_text = pygame.font.Font("freesansbold.ttf",20)
-    text_surf = small_text.render(text ,True,(255,255,255))
-    text_rect = text_surf.get_rect()
-    text_rect.center = ((x+width/2), (y+height/2))
-    screen.blit(text_surf, text_rect)
 
 def game_loop():
     global game_state
@@ -114,21 +147,46 @@ def game_loop():
 def quit_game():
     pygame.quit()
     quit()
+
+def resume_game():
+    global game_state
+    game_state = RUNNING  # This resumes the game
+
+def go_to_main_menu():
+    global game_state
+    game_state = MENU # This takes the player back to the main menu
+
+
+
+
+quit_button = Button(350, 450, 100, 50, "Quit", color=(255, 0, 0), highlight_color=(200, 0, 0), function=quit_game)
+play_button = Button(150, 450, 100, 50, "Play", color=(0, 255, 0), highlight_color=(0, 200, 0), function=game_loop)
+
+resume_button = Button(150, 450, 200, 50, "Resume", color=(0, 255, 0), highlight_color=(0, 200, 0), function=resume_game)
+main_menu_button = Button(400, 450, 300, 50, "Main Menu", color=(255, 0, 0), highlight_color=(200, 0, 0), function=go_to_main_menu)
+
+
 def main_menu():
     global game_state
-    while game_state == MENU:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                quit()
+    screen.fill((0, 0, 0))
+    screen.blit(background, (0, 0))
 
-        screen.fill((0, 0, 0))
-        screen.blit(background, (0, 0))
+    play_button.draw(screen)
+    quit_button.draw(screen)
 
-        draw_button("Play", 150, 450, 100, 50, (0, 255, 0), (0, 200, 0), game_loop)
-        draw_button("Quit", 350, 450, 100, 50, (255, 0, 0), (200, 0, 0), quit_game)
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            pygame.quit()
+            quit()
+        elif event.type == pygame.MOUSEBUTTONDOWN:
+            if play_button.is_over(pygame.mouse.get_pos()):
+                play_button.function()  # Directly call the function
+            elif quit_button.is_over(pygame.mouse.get_pos()):
+                quit_button.function()  # Directly call the function
 
-        pygame.display.update()
+    pygame.display.update()
+
+
 
     for event in pygame.event.get():
         if event.type == pygame.KEYDOWN:
@@ -141,22 +199,27 @@ def main_menu():
 
 def pause_menu():
     global game_state
-    pause_text = over_font.render("Paused", True, (255, 255, 255))
-    screen.blit(pause_text, (540, SCREEN_HEIGHT / 2 - 50))
-    pygame.display.update()
+    while game_state == PAUSED:
+        screen.fill((0, 0, 0))  # Or use a more appropriate background
+        screen.blit(background, (0, 0))
 
-    paused = True
-    while paused:
         for event in pygame.event.get():
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_c:
-                    paused = False
-                elif event.key == pygame.K_q:
-                    game_state = MENU
-                    paused = False
-            elif event.type == pygame.QUIT:
+            if event.type == pygame.QUIT:
                 pygame.quit()
-                exit()
+                quit()
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                if resume_button.is_over(pygame.mouse.get_pos()):
+                    resume_button.handle_event(event)
+                if main_menu_button.is_over(pygame.mouse.get_pos()):
+                    main_menu_button.handle_event(event)
+
+        resume_button.draw(screen)
+        main_menu_button.draw(screen)
+
+        pygame.display.update()
+
+
+
 
 
 # Main game loop
@@ -183,7 +246,7 @@ while running:
                         bullet_sound.play()
                         bullet_x = player_x + 16
                         fire_bullet(bullet_x, bullet_y)
-                elif event.key == pygame.K_p:
+                elif event.key == pygame.K_ESCAPE:
                     game_state = PAUSED
             if event.type == pygame.KEYUP:
                 if event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT:
