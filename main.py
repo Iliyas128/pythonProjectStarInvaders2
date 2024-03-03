@@ -57,7 +57,10 @@ enemies_per_level = 5
 enemies = [create_enemy() for _ in range(enemies_per_level)]
 
 # Bullet
-bullet_img = pygame.image.load('bullet.png').convert_alpha()
+try:
+    bullet_img = pygame.image.load('bullet.png').convert_alpha()
+except pygame.error:
+    print("Error loading bullet image.")
 # bullet_x = 0
 # bullet_y = player_y
 bullet_x_change = 0
@@ -241,9 +244,9 @@ def main():
                     running = False
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_LEFT:
-                        player_x_change = -5
+                        player_x_change = -2
                     elif event.key == pygame.K_RIGHT:
-                        player_x_change = 5
+                        player_x_change = 2
                     elif event.key == pygame.K_SPACE:
                         if bullet_state == "ready":
                             bullet_sound = mixer.Sound("laser.wav")
